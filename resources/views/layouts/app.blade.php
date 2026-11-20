@@ -306,13 +306,17 @@
         </div>
     </div>
 
-    <!-- Notification Toast Flottante -->
+    <!-- Notification Toast Flottante (Non-intrusive avec raccourci optionnel) -->
     <div id="toastNotification" class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none">
-        <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700">
-            <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-700 pointer-events-auto">
+            <div class="w-6 h-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center flex-shrink-0">
                 <i data-lucide="check" class="w-3.5 h-3.5"></i>
             </div>
             <span id="toastMessage" class="text-xs font-medium">Produit ajouté au panier</span>
+            <button type="button" onclick="openCartDrawer()" class="text-xs text-blue-400 hover:text-blue-300 font-bold ml-1 underline flex items-center gap-1 transition">
+                <span>Voir le panier</span>
+                <i data-lucide="arrow-right" class="w-3 h-3"></i>
+            </button>
         </div>
     </div>
 
@@ -414,25 +418,42 @@
             }
         }
 
-        function addToCart(id, name, price, maxStock, image) {
+        function addToCart(id, name, price, maxStock, image, qty = 1) {
+            qty = parseInt(qty) || 1;
+            if (qty < 1) qty = 1;
+
             const existing = cart.find(i => i.id === id);
             if (existing) {
-                if (existing.qty < maxStock) {
-                    existing.qty += 1;
+                if (existing.qty + qty <= maxStock) {
+                    existing.qty += qty;
                 } else {
                     showToast('Stock maximal disponible atteint (' + maxStock + ')');
                     return;
                 }
             } else {
-                if (maxStock < 1) {
-                    showToast('Produit actuellement en rupture');
+                if (maxStock < qty) {
+                    showToast('Quantité demandée supérieure au stock (' + maxStock + ')');
                     return;
                 }
-                cart.push({ id, name, price, qty: 1, image, maxStock });
+                cart.push({ id, name, price, qty: qty, image, maxStock });
             }
             saveCart();
-            showToast('✓ ' + name + ' ajouté au panier');
-            openCartDrawer();
+            showToast('✓ ' + (qty > 1 ? qty + ' × ' : '') + name + ' ajouté au panier');
+            animateCartBadge();
+            // Le panier reste fermé pour ne pas perturber la navigation !
+        }
+
+        function animateCartBadge() {
+            const btn = document.getElementById('openCartBtn');
+            const badge = document.getElementById('cartCountBadge');
+            if (btn) {
+                btn.classList.add('scale-105', 'ring-4', 'ring-blue-300/60');
+                setTimeout(() => btn.classList.remove('scale-105', 'ring-4', 'ring-blue-300/60'), 300);
+            }
+            if (badge) {
+                badge.classList.add('animate-bounce');
+                setTimeout(() => badge.classList.remove('animate-bounce'), 600);
+            }
         }
 
         function changeQty(index, delta) {

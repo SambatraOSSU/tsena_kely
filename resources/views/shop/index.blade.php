@@ -175,29 +175,52 @@
                         </p>
                     </div>
 
-                    <!-- Prix & Action Ajouter -->
-                    <div class="pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <div>
+                    <!-- Prix & Action Ajouter avec Sélecteur de Quantité -->
+                    <div class="pt-3 border-t border-slate-100 space-y-2.5">
+                        <div class="flex items-center justify-between">
                             <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Prix unitaire</span>
                             <span class="text-base font-extrabold text-slate-900 font-mono">
                                 {{ number_format($product->price, 0, ',', ' ') }} Ar
                             </span>
                         </div>
 
-                        <button type="button" 
-                                onclick="addToCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, {{ $product->stock }}, '{{ $product->image }}')"
-                                {{ $product->stock <= 0 ? 'disabled' : '' }}
-                                class="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold rounded-xl transition active:scale-95
-                                    {{ $product->stock > 0 
-                                        ? 'bg-blue-600 hover:bg-blue-700 text-white shadow-glow-brand' 
-                                        : 'bg-slate-100 text-slate-400 cursor-not-allowed' }}">
-                            @if($product->stock > 0)
-                                <i data-lucide="plus" class="w-3.5 h-3.5"></i>
-                                <span>Ajouter</span>
-                            @else
-                                <span>Rupture</span>
-                            @endif
-                        </button>
+                        @if($product->stock > 0)
+                            <div class="flex items-center gap-2">
+                                <!-- Stepper de Quantité Direct -->
+                                <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200">
+                                    <button type="button" 
+                                            onclick="adjustProductQty({{ $product->id }}, -1, {{ $product->stock }})"
+                                            class="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-lg font-bold hover:bg-white transition text-xs">
+                                        -
+                                    </button>
+                                    <input type="number" 
+                                           id="product-qty-{{ $product->id }}" 
+                                           value="1" 
+                                           min="1" 
+                                           max="{{ $product->stock }}"
+                                           onchange="validateProductQty({{ $product->id }}, {{ $product->stock }})"
+                                           class="w-9 bg-transparent text-center font-bold text-slate-900 text-xs focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none">
+                                    <button type="button" 
+                                            onclick="adjustProductQty({{ $product->id }}, 1, {{ $product->stock }})"
+                                            class="w-7 h-7 flex items-center justify-center text-slate-600 hover:text-slate-900 rounded-lg font-bold hover:bg-white transition text-xs">
+                                        +
+                                    </button>
+                                </div>
+
+                                <!-- Bouton Ajouter Silencieux -->
+                                <button type="button" 
+                                        onclick="submitAddToCart({{ $product->id }}, '{{ addslashes($product->name) }}', {{ $product->price }}, {{ $product->stock }}, '{{ $product->image }}')"
+                                        class="flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 text-xs font-bold rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-glow-brand transition active:scale-95">
+                                    <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+                                    <span>Ajouter</span>
+                                </button>
+                            </div>
+                        @else
+                            <button type="button" disabled
+                                    class="w-full py-2 px-3 text-xs font-bold rounded-xl bg-slate-100 text-slate-400 cursor-not-allowed text-center">
+                                Rupture
+                            </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -214,8 +237,34 @@
 
 </div>
 
-<!-- Script Filtrage Instantané Côté Client -->
+<!-- Scripts Spécifiques Boutique : Filtrage & Sélecteur de Quantité -->
 <script>
+    function adjustProductQty(id, delta, maxStock) {
+        const input = document.getElementById('product-qty-' + id);
+        if (!input) return;
+        let val = parseInt(input.value) || 1;
+        val += delta;
+        if (val < 1) val = 1;
+        if (val > maxStock) val = maxStock;
+        input.value = val;
+    }
+
+    function validateProductQty(id, maxStock) {
+        const input = document.getElementById('product-qty-' + id);
+        if (!input) return;
+        let val = parseInt(input.value) || 1;
+        if (val < 1) val = 1;
+        if (val > maxStock) val = maxStock;
+        input.value = val;
+    }
+
+    function submitAddToCart(id, name, price, maxStock, image) {
+        const input = document.getElementById('product-qty-' + id);
+        const qty = input ? (parseInt(input.value) || 1) : 1;
+        addToCart(id, name, price, maxStock, image, qty);
+        if (input) input.value = 1; // Réinitialise la jauge à 1 après l'ajout
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
         const searchInput = document.getElementById('liveSearchInput');
         const cards = document.querySelectorAll('.product-card');
