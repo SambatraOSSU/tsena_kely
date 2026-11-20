@@ -2,9 +2,9 @@
 
 namespace App\Services;
 
-use App\Models\TelemetryLog;
 use App\Models\Order;
 use App\Models\Product;
+use App\Models\TelemetryLog;
 use Illuminate\Support\Facades\File;
 
 class TelemetryService
@@ -29,27 +29,27 @@ class TelemetryService
 
         $logData = [
             'timestamp' => $timestamp,
-            'trace_id'  => $traceId,
-            'span_id'   => $spanId,
-            'service'   => $service,
-            'level'     => $level,
-            'message'   => $message,
-            'context'   => $context,
+            'trace_id' => $traceId,
+            'span_id' => $spanId,
+            'service' => $service,
+            'level' => $level,
+            'message' => $message,
+            'context' => $context,
         ];
 
         // Ecriture dans le fichier de log JSON pour le collecteur
         $logPath = storage_path('logs/telemetry.json');
-        File::append($logPath, json_encode($logData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) . PHP_EOL);
+        File::append($logPath, json_encode($logData, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES).PHP_EOL);
 
         // Sauvegarde en base PostgreSQL pour le diagnostic direct
         try {
             TelemetryLog::create([
-                'trace_id'   => $traceId,
-                'span_id'    => $spanId,
-                'service'    => $service,
-                'level'      => $level,
-                'message'    => $message,
-                'context'    => $context,
+                'trace_id' => $traceId,
+                'span_id' => $spanId,
+                'service' => $service,
+                'level' => $level,
+                'message' => $message,
+                'context' => $context,
                 'created_at' => now(),
             ]);
         } catch (\Throwable $e) {
@@ -77,7 +77,7 @@ class TelemetryService
 
         $lines[] = '# HELP tsena_order_execution_time_ms_avg Duree moyenne de traitement des commandes en ms';
         $lines[] = '# TYPE tsena_order_execution_time_ms_avg gauge';
-        $lines[] = sprintf("tsena_order_execution_time_ms_avg %.2f", $avgExecutionTime);
+        $lines[] = sprintf('tsena_order_execution_time_ms_avg %.2f', $avgExecutionTime);
 
         // Metriques de stock par produit
         $lines[] = '# HELP tsena_product_stock_quantity Quantite actuelle en stock';
@@ -88,6 +88,6 @@ class TelemetryService
             $lines[] = "tsena_product_stock_quantity{id=\"{$p->id}\",name=\"{$escapedName}\"} {$p->stock}";
         }
 
-        return implode(PHP_EOL, $lines) . PHP_EOL;
+        return implode(PHP_EOL, $lines).PHP_EOL;
     }
 }

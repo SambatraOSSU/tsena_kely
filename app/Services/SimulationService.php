@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 class SimulationService
 {
     protected OrderService $orderService;
+
     protected TelemetryService $telemetry;
 
     public function __construct(OrderService $orderService, TelemetryService $telemetry)
@@ -29,8 +30,8 @@ class SimulationService
 
         for ($i = 0; $i < $count; $i++) {
             $traceId = TelemetryService::generateTraceId();
-            $customerName = $names[array_rand($names)] . ' ' . rand(10, 99);
-            
+            $customerName = $names[array_rand($names)].' '.rand(10, 99);
+
             // Selection aleatoire de 1 a 3 produits
             $numItems = rand(1, min(3, $products->count()));
             $chosenProducts = $products->random($numItems);
@@ -41,30 +42,30 @@ class SimulationService
                 $qty = (rand(1, 10) === 10) ? $product->stock + rand(1, 5) : rand(1, 2);
                 $items[] = [
                     'product_id' => $product->id,
-                    'quantity'   => max(1, $qty),
+                    'quantity' => max(1, $qty),
                 ];
             }
 
             $order = $this->orderService->processOrder([
-                'customer_name'  => $customerName,
-                'customer_email' => strtolower(Str::slug($customerName)) . '@example.mg',
-                'customer_phone' => '034' . rand(1000000, 9999999),
-                'items'          => $items,
+                'customer_name' => $customerName,
+                'customer_email' => strtolower(Str::slug($customerName)).'@example.mg',
+                'customer_phone' => '034'.rand(1000000, 9999999),
+                'items' => $items,
             ], $traceId);
 
             $results[] = [
-                'order_number'      => $order->order_number,
-                'status'            => $order->status,
-                'customer'          => $order->customer_name,
-                'trace_id'          => $order->trace_id,
+                'order_number' => $order->order_number,
+                'status' => $order->status,
+                'customer' => $order->customer_name,
+                'trace_id' => $order->trace_id,
                 'execution_time_ms' => $order->execution_time_ms,
-                'failure_reason'    => $order->failure_reason,
+                'failure_reason' => $order->failure_reason,
             ];
         }
 
         return [
-            'status'  => 'success',
-            'count'   => $count,
+            'status' => 'success',
+            'count' => $count,
             'results' => $results,
         ];
     }

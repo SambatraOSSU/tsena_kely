@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Order;
 use App\Models\Product;
 use App\Models\SystemSetting;
 use Database\Seeders\ProductSeeder;
@@ -18,6 +17,7 @@ class TsenaKelyTest extends TestCase
         parent::setUp();
         $this->seed(ProductSeeder::class);
     }
+
     // Test d acces a la vitrine de la boutique
     public function test_shop_index_is_accessible(): void
     {
@@ -59,21 +59,21 @@ class TsenaKelyTest extends TestCase
         $this->assertNotNull($product);
 
         $cart = [
-            ['id' => $product->id, 'qty' => 1, 'name' => $product->name, 'price' => $product->price]
+            ['id' => $product->id, 'qty' => 1, 'name' => $product->name, 'price' => $product->price],
         ];
 
         $response = $this->post('/checkout', [
-            'customer_name'  => 'Test Unit Client',
+            'customer_name' => 'Test Unit Client',
             'customer_email' => 'test@tsenakely.mg',
             'customer_phone' => '0341234567',
-            'cart_items'     => json_encode($cart),
+            'cart_items' => json_encode($cart),
         ]);
 
         $response->assertStatus(200);
         $response->assertSee('Commande Reussie');
         $this->assertDatabaseHas('orders', [
             'customer_name' => 'Test Unit Client',
-            'status'        => 'completed',
+            'status' => 'completed',
         ]);
     }
 

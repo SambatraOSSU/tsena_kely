@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\SystemSetting;
 use App\Models\TelemetryLog;
 use App\Services\SimulationService;
@@ -13,6 +14,7 @@ use Illuminate\Http\Response;
 class TelemetryController extends Controller
 {
     protected TelemetryService $telemetry;
+
     protected SimulationService $simulation;
 
     public function __construct(TelemetryService $telemetry, SimulationService $simulation)
@@ -25,6 +27,7 @@ class TelemetryController extends Controller
     public function metrics(): Response
     {
         $metrics = $this->telemetry->renderPrometheusMetrics();
+
         return response($metrics, 200, [
             'Content-Type' => 'text/plain; version=0.0.4; charset=utf-8',
         ]);
@@ -34,10 +37,10 @@ class TelemetryController extends Controller
     public function dashboard(Request $request)
     {
         $settings = [
-            'chaos_latency_ms'  => (int) SystemSetting::getVal('chaos_latency_ms', 0),
-            'chaos_error_rate'   => (int) SystemSetting::getVal('chaos_error_rate', 0),
-            'chaos_stock_down'   => SystemSetting::getVal('chaos_stock_down', '0') === '1',
-            'chaos_orders_down'  => SystemSetting::getVal('chaos_orders_down', '0') === '1',
+            'chaos_latency_ms' => (int) SystemSetting::getVal('chaos_latency_ms', 0),
+            'chaos_error_rate' => (int) SystemSetting::getVal('chaos_error_rate', 0),
+            'chaos_stock_down' => SystemSetting::getVal('chaos_stock_down', '0') === '1',
+            'chaos_orders_down' => SystemSetting::getVal('chaos_orders_down', '0') === '1',
         ];
 
         $totalOrders = Order::count();
@@ -59,7 +62,7 @@ class TelemetryController extends Controller
 
         $logs = $query->limit(50)->get();
         $recentOrders = Order::latest('id')->limit(12)->get()->reverse()->values();
-        $stockProducts = \App\Models\Product::all(['id', 'name', 'stock']);
+        $stockProducts = Product::all(['id', 'name', 'stock']);
 
         return view('telemetry.dashboard', compact('settings', 'totalOrders', 'successfulOrders', 'failedOrders', 'avgLatency', 'logs', 'recentOrders', 'stockProducts'));
     }

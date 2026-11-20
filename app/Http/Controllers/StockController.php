@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 class StockController extends Controller
 {
     protected StockService $stockService;
+
     protected TelemetryService $telemetry;
 
     public function __construct(StockService $stockService, TelemetryService $telemetry)

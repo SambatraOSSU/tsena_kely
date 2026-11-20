@@ -9,6 +9,7 @@ class SimulateTrafficCommand extends Command
 {
     // Commande de generation de trafic utilisateur continu
     protected $signature = 'tsena:simulate {--requests=10 : Nombre de requetes a envoyer} {--delay=500 : Delai entre requetes en millisecondes} {--continuous : Boucle infinie}';
+
     protected $description = 'Simuler le trafic utilisateur sur la boutique Tsena Kely';
 
     public function handle(SimulationService $simulation): int
@@ -17,7 +18,7 @@ class SimulateTrafficCommand extends Command
         $delayMs = (int) $this->option('delay');
         $total = (int) $this->option('requests');
 
-        $this->info("Demarrage de la simulation de trafic...");
+        $this->info('Demarrage de la simulation de trafic...');
 
         $iteration = 0;
         while ($continuous || $iteration < $total) {
@@ -36,6 +37,7 @@ class SimulateTrafficCommand extends Command
         }
 
         $this->info("Simulation terminee. {$iteration} requetes traitees.");
+
         return 0;
     }
 }

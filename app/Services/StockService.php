@@ -30,8 +30,9 @@ class StockService
         $missing = [];
         foreach ($items as $item) {
             $product = Product::find($item['product_id']);
-            if (!$product) {
+            if (! $product) {
                 $missing[] = "Produit #{$item['product_id']} introuvable";
+
                 continue;
             }
 
@@ -39,8 +40,8 @@ class StockService
                 $missing[] = "Stock insuffisant pour {$product->name} (demande: {$item['quantity']}, dispo: {$product->stock})";
                 $this->telemetry->log('stock', 'warning', "Stock insuffisant pour {$product->name}", $traceId, null, [
                     'product_id' => $product->id,
-                    'requested'  => $item['quantity'],
-                    'available'  => $product->stock,
+                    'requested' => $item['quantity'],
+                    'available' => $product->stock,
                 ]);
             }
         }
@@ -52,7 +53,7 @@ class StockService
 
         return [
             'available' => $success,
-            'errors'    => $missing,
+            'errors' => $missing,
         ];
     }
 
@@ -69,8 +70,8 @@ class StockService
 
                     $this->telemetry->log('stock', 'info', "Stock mis a jour pour {$product->name}", $traceId, null, [
                         'product_id' => $product->id,
-                        'old_stock'  => $oldStock,
-                        'new_stock'  => $product->stock,
+                        'old_stock' => $oldStock,
+                        'new_stock' => $product->stock,
                     ]);
                 }
             }
@@ -86,8 +87,8 @@ class StockService
 
         $this->telemetry->log('stock', 'info', "Reapprovisionnement effectue pour {$product->name}", $traceId, null, [
             'product_id' => $productId,
-            'added'      => $quantity,
-            'new_stock'  => $product->stock,
+            'added' => $quantity,
+            'new_stock' => $product->stock,
         ]);
 
         return $product;
