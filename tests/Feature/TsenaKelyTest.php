@@ -96,4 +96,25 @@ class TsenaKelyTest extends TestCase
         SystemSetting::setVal('chaos_error_rate', '0');
         SystemSetting::setVal('chaos_stock_down', '0');
     }
+
+    // Test de la structure App Shell SPA et des Skeleton Loaders
+    public function test_spa_app_shell_and_skeleton_assets_are_present(): void
+    {
+        $response = $this->get('/');
+        $response->assertStatus(200);
+
+        // Verification des elements structurels SPA
+        $response->assertSee('id="topProgressBar"', false);
+        $response->assertSee('id="app-main"', false);
+        $response->assertSee('id="chaosBannerContainer"', false);
+        $response->assertSee('id="flashAlertContainer"', false);
+        $response->assertSee('data-nav-route="shop"', false);
+        $response->assertSee('data-nav-route="stock"', false);
+        $response->assertSee('data-nav-route="orders"', false);
+        $response->assertSee('data-nav-route="telemetry"', false);
+
+        // Verification du moteur de Skeleton Shimmer
+        $response->assertSee('skeleton-shimmer', false);
+        $response->assertSee('spaNavigate', false);
+    }
 }

@@ -73,36 +73,82 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+
+        /* Shimmer Animation pour les Skeleton Loaders (NovaBank / High-Level SaaS) */
+        @keyframes skeletonShimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+        .skeleton-shimmer {
+            background: linear-gradient(90deg, #f1f5f9 0%, #e2e8f0 50%, #f1f5f9 100%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s ease-in-out infinite;
+        }
+
+        /* Transition douce d'apparition de contenu */
+        .spa-fade-in {
+            animation: spaFadeIn 0.22s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        @keyframes spaFadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(3px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Barre de progression ultra-fine Vercel/Linear */
+        #topProgressBar.is-loading {
+            opacity: 1;
+            transition: width 0.35s ease-out, opacity 0.2s ease-in;
+        }
+        #topProgressBar.is-done {
+            width: 100% !important;
+            opacity: 0;
+            transition: width 0.15s ease-out, opacity 0.25s 0.1s ease-in;
+        }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-full flex flex-col antialiased">
 
-    <!-- Bannière Chaos System Status (visible si chaos activé) -->
-    @php
-        $chaosLatency = (int) \App\Models\SystemSetting::getVal('chaos_latency_ms', 0);
-        $chaosErrorRate = (int) \App\Models\SystemSetting::getVal('chaos_error_rate', 0);
-        $chaosStockDown = \App\Models\SystemSetting::getVal('chaos_stock_down', '0') === '1';
-        $chaosOrdersDown = \App\Models\SystemSetting::getVal('chaos_orders_down', '0') === '1';
-        $isChaosActive = ($chaosLatency > 0 || $chaosErrorRate > 0 || $chaosStockDown || $chaosOrdersDown);
-    @endphp
+    <!-- Barre de Progression Supérieure Haute Fidélité (Vercel / Linear Style) -->
+    <div id="topProgressBar" class="fixed top-0 left-0 h-0.5 bg-gradient-to-r from-blue-600 via-indigo-500 to-cyan-400 z-50 pointer-events-none opacity-0 w-0 shadow-[0_0_10px_rgba(37,99,235,0.7)] transition-all duration-300"></div>
 
-    @if($isChaosActive)
-        <div class="bg-amber-500 text-slate-900 text-xs py-1.5 px-4 font-medium flex items-center justify-between border-b border-amber-600">
-            <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <span class="inline-block w-2 h-2 rounded-full bg-slate-900 animate-ping"></span>
-                    <span class="font-bold">⚠️ Mode Chaos Actif :</span>
-                    <span>
-                        @if($chaosLatency > 0) +{{ $chaosLatency }}ms latence @endif
-                        @if($chaosErrorRate > 0) • {{ $chaosErrorRate }}% erreurs 500 @endif
-                        @if($chaosStockDown) • Service Stock COUPÉ (503) @endif
-                        @if($chaosOrdersDown) • Service Commandes COUPÉ (503) @endif
-                    </span>
+    <!-- Conteneur Bannière Chaos System Status (mis à jour dynamiquement) -->
+    <div id="chaosBannerContainer">
+        @php
+            $chaosLatency = (int) \App\Models\SystemSetting::getVal('chaos_latency_ms', 0);
+            $chaosErrorRate = (int) \App\Models\SystemSetting::getVal('chaos_error_rate', 0);
+            $chaosStockDown = \App\Models\SystemSetting::getVal('chaos_stock_down', '0') === '1';
+            $chaosOrdersDown = \App\Models\SystemSetting::getVal('chaos_orders_down', '0') === '1';
+            $isChaosActive = ($chaosLatency > 0 || $chaosErrorRate > 0 || $chaosStockDown || $chaosOrdersDown);
+        @endphp
+
+        @if($isChaosActive)
+            <div class="bg-amber-500 text-slate-900 text-xs py-1.5 px-4 font-medium flex items-center justify-between border-b border-amber-600">
+                <div class="max-w-7xl mx-auto w-full flex items-center justify-between">
+                    <div class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-slate-900 animate-ping"></span>
+                        <span class="font-bold">⚠️ Mode Chaos Actif :</span>
+                        <span>
+                            @if($chaosLatency > 0) +{{ $chaosLatency }}ms latence @endif
+                            @if($chaosErrorRate > 0) • {{ $chaosErrorRate }}% erreurs 500 @endif
+                            @if($chaosStockDown) • Service Stock COUPÉ (503) @endif
+                            @if($chaosOrdersDown) • Service Commandes COUPÉ (503) @endif
+                        </span>
+                    </div>
+                    <a href="{{ route('telemetry.dashboard') }}" class="underline font-semibold hover:text-white transition">Gérer les pannes &rarr;</a>
                 </div>
-                <a href="{{ route('telemetry.dashboard') }}" class="underline font-semibold hover:text-white transition">Gérer les pannes &rarr;</a>
             </div>
-        </div>
-    @endif
+        @endif
+    </div>
 
     <!-- Barre de Navigation Principale -->
     <header class="bg-white/95 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40">
@@ -125,18 +171,22 @@
                 <!-- Navigation Tabs Pills (Style NovaBank) -->
                 <nav class="hidden md:flex items-center bg-slate-100/90 p-1 rounded-full border border-slate-200/70 text-xs font-semibold">
                     <a href="{{ route('shop.index') }}" 
+                       data-nav-route="shop"
                        class="px-4 py-1.5 rounded-full transition {{ request()->routeIs('shop.*') ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
                        Boutique
                     </a>
                     <a href="{{ route('stock.index') }}" 
+                       data-nav-route="stock"
                        class="px-4 py-1.5 rounded-full transition {{ request()->routeIs('stock.*') ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
                        Service Stock
                     </a>
                     <a href="{{ route('orders.index') }}" 
+                       data-nav-route="orders"
                        class="px-4 py-1.5 rounded-full transition {{ request()->routeIs('orders.*') ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
                        Service Commandes
                     </a>
                     <a href="{{ route('telemetry.dashboard') }}" 
+                       data-nav-route="telemetry"
                        class="px-4 py-1.5 rounded-full transition {{ request()->routeIs('telemetry.*') ? 'bg-blue-600 text-white shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 hover:bg-white/60' }}">
                        Diagnostic & Chaos
                     </a>
@@ -168,16 +218,16 @@
 
         <!-- Menu Mobile Déroulant -->
         <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 bg-white px-4 pt-3 pb-4 space-y-1">
-            <a href="{{ route('shop.index') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('shop.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Boutique</a>
-            <a href="{{ route('stock.index') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('stock.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Service Stock</a>
-            <a href="{{ route('orders.index') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('orders.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Service Commandes</a>
-            <a href="{{ route('telemetry.dashboard') }}" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('telemetry.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Diagnostic & Chaos</a>
+            <a href="{{ route('shop.index') }}" data-mobile-route="shop" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('shop.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Boutique</a>
+            <a href="{{ route('stock.index') }}" data-mobile-route="stock" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('stock.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Service Stock</a>
+            <a href="{{ route('orders.index') }}" data-mobile-route="orders" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('orders.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Service Commandes</a>
+            <a href="{{ route('telemetry.dashboard') }}" data-mobile-route="telemetry" class="block px-3 py-2 rounded-lg text-sm font-semibold {{ request()->routeIs('telemetry.*') ? 'bg-blue-50 text-blue-700' : 'text-slate-700 hover:bg-slate-50' }}">Diagnostic & Chaos</a>
             <a href="{{ route('telemetry.metrics') }}" target="_blank" class="block px-3 py-2 rounded-lg text-xs font-mono text-slate-500 hover:bg-slate-50">Scraping Prometheus (/metrics)</a>
         </div>
     </header>
 
     <!-- Conteneur Flash Alerts -->
-    <div class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-4">
+    <div id="flashAlertContainer" class="max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 mt-4">
         @if(session('success'))
             <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-medium flex items-center justify-between shadow-sm">
                 <div class="flex items-center gap-2">
@@ -199,9 +249,10 @@
         @endif
     </div>
 
-    <!-- Contenu Principal -->
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <!-- Contenu Principal (Conteneur Morphing SPA) -->
+    <main id="app-main" class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
         @yield('content')
+    </main>
     </main>
 
     <!-- Slide-over Drawer Panier (Style Moderne NovaBank) -->
@@ -550,14 +601,17 @@
             if (typeof syncShopCardsUI === 'function') {
                 syncShopCardsUI();
             }
-        }
+        });
 
         function updateCartItemQtyById(id, delta) {
             const index = cart.findIndex(i => i.id === id);
             if (index !== -1) {
                 changeQty(index, delta);
             }
-        });
+        }
     </script>
+
+    <!-- Moteur SPA & Skeleton Shimmer (Chargement instantané sans rechargement) -->
+    @include('layouts.spa-engine')
 </body>
 </html>
