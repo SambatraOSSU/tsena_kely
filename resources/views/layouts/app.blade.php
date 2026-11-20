@@ -416,6 +416,17 @@
             if (window.lucide) {
                 window.lucide.createIcons();
             }
+
+            if (typeof syncShopCardsUI === 'function') {
+                syncShopCardsUI();
+            }
+        }
+
+        function updateCartItemQtyById(id, delta) {
+            const index = cart.findIndex(i => i.id === id);
+            if (index !== -1) {
+                changeQty(index, delta);
+            }
         }
 
         function addToCart(id, name, price, maxStock, image, qty = 1) {
@@ -534,6 +545,17 @@
             updateCartUI();
             if (window.lucide) {
                 window.lucide.createIcons();
+            }
+
+            if (typeof syncShopCardsUI === 'function') {
+                syncShopCardsUI();
+            }
+        }
+
+        function updateCartItemQtyById(id, delta) {
+            const index = cart.findIndex(i => i.id === id);
+            if (index !== -1) {
+                changeQty(index, delta);
             }
         });
     </script>

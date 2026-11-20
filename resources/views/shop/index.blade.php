@@ -145,6 +145,14 @@
                         </span>
                     </div>
 
+                    <!-- Badge Déjà au Panier (Dynamique) -->
+                    <div id="card-incart-badge-{{ $product->id }}" class="hidden absolute bottom-3 left-3 z-10">
+                        <span class="inline-flex items-center gap-1 text-[10px] font-extrabold px-2.5 py-1 rounded-full bg-blue-600 text-white shadow-md">
+                            <i data-lucide="shopping-cart" class="w-3 h-3"></i>
+                            <span><span id="badge-qty-{{ $product->id }}">0</span> dans le panier</span>
+                        </span>
+                    </div>
+
                     <!-- Badge Statut Stock -->
                     <div class="absolute top-3 right-3">
                         @if($product->stock > 5)
@@ -175,7 +183,7 @@
                         </p>
                     </div>
 
-                    <!-- Prix & Action Ajouter avec Sélecteur de Quantité -->
+                    <!-- Prix & Action Ajouter / Gestion Quantité -->
                     <div class="pt-3 border-t border-slate-100 space-y-2.5">
                         <div class="flex items-center justify-between">
                             <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 block">Prix unitaire</span>
@@ -185,7 +193,8 @@
                         </div>
 
                         @if($product->stock > 0)
-                            <div class="flex items-center gap-2">
+                            <!-- État 1 : Pas encore au panier (Sélecteur initial + Bouton Ajouter) -->
+                            <div id="card-action-initial-{{ $product->id }}" class="flex items-center gap-2">
                                 <!-- Stepper de Quantité Direct -->
                                 <div class="flex items-center bg-slate-100 rounded-xl p-0.5 border border-slate-200">
                                     <button type="button" 
@@ -214,6 +223,30 @@
                                     <i data-lucide="plus" class="w-3.5 h-3.5"></i>
                                     <span>Ajouter</span>
                                 </button>
+                            </div>
+
+                            <!-- État 2 : Déjà au panier (Contrôleur Actif Direct Style NovaBank) -->
+                            <div id="card-action-incart-{{ $product->id }}" class="hidden">
+                                <div class="w-full flex items-center justify-between bg-blue-50/90 border border-blue-200 rounded-xl p-1 shadow-sm">
+                                    <button type="button" 
+                                            onclick="updateCartItemQtyById({{ $product->id }}, -1)"
+                                            class="w-8 h-8 rounded-lg bg-white hover:bg-rose-50 hover:text-rose-600 text-slate-700 font-extrabold flex items-center justify-center shadow-sm transition active:scale-95 text-sm"
+                                            title="Diminuer">
+                                        -
+                                    </button>
+                                    <div class="text-center px-2">
+                                        <span class="text-[9px] uppercase font-extrabold tracking-wider text-blue-600 block leading-tight">Au panier</span>
+                                        <span class="text-xs font-mono font-extrabold text-blue-900">
+                                            <span id="incart-qty-val-{{ $product->id }}">0</span> unité(s)
+                                        </span>
+                                    </div>
+                                    <button type="button" 
+                                            onclick="updateCartItemQtyById({{ $product->id }}, 1)"
+                                            class="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-extrabold flex items-center justify-center shadow-sm transition active:scale-95 text-sm"
+                                            title="Augmenter">
+                                        +
+                                    </button>
+                                </div>
                             </div>
                         @else
                             <button type="button" disabled
@@ -265,7 +298,41 @@
         if (input) input.value = 1; // Réinitialise la jauge à 1 après l'ajout
     }
 
+    // Synchronisation en temps réel de l'état des fiches produits avec le panier
+    function syncShopCardsUI() {
+        if (!Array.isArray(cart)) return;
+
+        document.querySelectorAll('[id^="card-action-initial-"]').forEach(initialEl => {
+            const id = parseInt(initialEl.id.replace('card-action-initial-', ''));
+            const incartEl = document.getElementById('card-action-incart-' + id);
+            const badgeEl = document.getElementById('card-incart-badge-' + id);
+            const qtyValEl = document.getElementById('incart-qty-val-' + id);
+            const badgeQtyEl = document.getElementById('badge-qty-' + id);
+
+            const cartItem = cart.find(i => i.id === id);
+
+            if (cartItem && cartItem.qty > 0) {
+                // Article présent dans le panier : Afficher contrôleur direct et badge
+                initialEl.classList.add('hidden');
+                if (incartEl) incartEl.classList.remove('hidden');
+                if (badgeEl) badgeEl.classList.remove('hidden');
+                if (qtyValEl) qtyValEl.innerText = cartItem.qty;
+                if (badgeQtyEl) badgeQtyEl.innerText = cartItem.qty;
+            } else {
+                // Article absent du panier : Afficher le sélecteur d'ajout initial
+                initialEl.classList.remove('hidden');
+                if (incartEl) incartEl.classList.add('hidden');
+                if (badgeEl) badgeEl.classList.add('hidden');
+            }
+        });
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        syncShopCardsUI();
         const searchInput = document.getElementById('liveSearchInput');
         const cards = document.querySelectorAll('.product-card');
 
