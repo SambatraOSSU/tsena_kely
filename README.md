@@ -26,7 +26,24 @@ Projet Laravel 13 et Blade connecte a PostgreSQL 17 pour la plateforme d'observa
    - Console de diagnostic et correlation trace -> logs : `/telemetry`
    - Exploration detaillee par trace : `/telemetry/trace/{traceId}`
 
-## Commandes Principales
+## Lancement avec Docker (Recommande)
+
+Le projet dispose d'une configuration Docker Compose complete (PHP 8.3-FPM + Nginx + Prometheus) :
+
+```bash
+# 1. Construire et demarrer les conteneurs
+docker compose up -d --build
+
+# 2. Acceder a l'application
+# Boutique & Services : http://localhost:8000
+# Endpoint Prometheus : http://localhost:8000/metrics
+# Serveur Prometheus  : http://localhost:9090
+
+# 3. Arreter les conteneurs
+docker compose down
+```
+
+## Commandes Principales (Local sans Docker)
 
 ```bash
 # Lancer le serveur de developpement
