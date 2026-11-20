@@ -58,8 +58,10 @@ class TelemetryController extends Controller
         }
 
         $logs = $query->limit(50)->get();
+        $recentOrders = Order::latest('id')->limit(12)->get()->reverse()->values();
+        $stockProducts = \App\Models\Product::all(['id', 'name', 'stock']);
 
-        return view('telemetry.dashboard', compact('settings', 'totalOrders', 'successfulOrders', 'failedOrders', 'avgLatency', 'logs'));
+        return view('telemetry.dashboard', compact('settings', 'totalOrders', 'successfulOrders', 'failedOrders', 'avgLatency', 'logs', 'recentOrders', 'stockProducts'));
     }
 
     // Mise a jour des interrupteurs de pannes pour la demonstration

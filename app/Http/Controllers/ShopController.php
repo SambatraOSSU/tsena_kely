@@ -29,9 +29,10 @@ class ShopController extends Controller
 
         if ($request->filled('search')) {
             $term = $request->input('search');
-            $query->where(function ($q) use ($term) {
-                $q->where('name', 'ilike', "%{$term}%")
-                  ->orWhere('description', 'ilike', "%{$term}%");
+            $operator = config('database.default') === 'pgsql' ? 'ilike' : 'like';
+            $query->where(function ($q) use ($term, $operator) {
+                $q->where('name', $operator, "%{$term}%")
+                  ->orWhere('description', $operator, "%{$term}%");
             });
         }
 
